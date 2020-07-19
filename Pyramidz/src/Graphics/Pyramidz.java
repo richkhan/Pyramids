@@ -1,4 +1,4 @@
-package sample;
+package Graphics;
 
 import javafx.application.Application;
 import javafx.beans.property.DoubleProperty;
@@ -11,14 +11,17 @@ import javafx.scene.shape.CullFace;
 import javafx.scene.shape.DrawMode;
 import javafx.scene.shape.MeshView;
 import javafx.scene.shape.TriangleMesh;
+import javafx.scene.transform.Rotate;
 import javafx.stage.Stage;
 
 public class Pyramidz extends Application {
 
     private PerspectiveCamera camera;
     private final double sceneWidth = 600;
-    private double sceneHeight = 600;
-    private double scenex, scenery = 0;
+    private final double sceneHeight = 600;
+    private double sceneX, sceneY = 0;
+    private double fixedXAngle, fixedYAngle = 0;
+    private double anchorAngleX, anchorAngleY = 0;
     private final DoubleProperty angleX = new SimpleDoubleProperty(0);
     private final DoubleProperty angleY = new SimpleDoubleProperty(0);
 
@@ -27,7 +30,31 @@ public class Pyramidz extends Application {
         Parent root = FXMLLoader.load(getClass().getResource("sample.fxml"));
 
         Group pyramid1 = buildPyramid(100, 200, Color.BLUEVIOLET, false, false);
-        Group pyramidGroup = new Group(pyramid1);
+        Group pyramid2 = buildPyramid(100, 200, Color.BLUEVIOLET, true, true);
+        Group pyramid3 = buildPyramid(100,200,Color.DEEPPINK,true,true);
+        Group pyramid4 = buildPyramid(100,200,Color.DEEPPINK,true,false);
+
+        pyramid1.setTranslateX(-100);
+        pyramid1.setRotationAxis(Rotate.Y_AXIS);
+        pyramid1.setRotate(45);
+
+        pyramid2.setTranslateX(-100);
+        pyramid2.setTranslateY(-100);
+        pyramid2.setRotationAxis(Rotate.Z_AXIS);
+        pyramid2.setRotate(180);
+
+        pyramid3.setTranslateX(100);
+
+        pyramid4.setTranslateX(100);
+        pyramid4.setTranslateY(-100);
+        pyramid4.setRotationAxis(Rotate.Z_AXIS);
+        pyramid4.setRotate(180);
+
+        Group pyramidGroup = new Group(pyramid1, pyramid2, pyramid3, pyramid4);
+
+        Rotate xRotate = new Rotate(0, Rotate.X_AXIS);
+        Rotate yRotate = new Rotate(0, Rotate.Y_AXIS);
+        pyramidGroup.getTransforms().addAll(xRotate,yRotate);
 
         Group mainGrp = new Group();
         Scene scene = new Scene(mainGrp, sceneWidth, sceneHeight);
@@ -38,9 +65,30 @@ public class Pyramidz extends Application {
         camera.setTranslateZ(-1000);
         scene.setCamera(camera);
 
+        xRotate.angleProperty().bind(angleX);
+        yRotate.angleProperty().bind(angleY);
+
+        scene.setOnMousePressed(event -> {
+            sceneX = event.getSceneX();
+            sceneY = event.getSceneY();
+            anchorAngleX = angleX.get();
+            anchorAngleY = angleY.get();
+        } );
+
+        scene.setOnMouseDragged(event -> {
+            angleX.set(anchorAngleX - (sceneX - event.getSceneY()));
+            angleY.set(anchorAngleY + sceneY - event.getSceneX());
+        });
+
+        PointLight light = new PointLight(Color.WHITE);
+
+        mainGrp.getChildren().add(light);
+        light.setTranslateZ(-sceneWidth);
+        light.setTranslateY(-sceneHeight);
+
         mainGrp.getChildren().addAll(pyramidGroup);
 
-        primaryStage.setTitle("TriangleMeshes");
+        primaryStage.setTitle("Pyramidz");
         primaryStage.setScene(scene);
         primaryStage.show();
 

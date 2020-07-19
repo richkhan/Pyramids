@@ -1,4 +1,4 @@
-package sample;
+package Graphics;
 
 public class Controller {
 }
